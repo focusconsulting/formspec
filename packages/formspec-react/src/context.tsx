@@ -31,6 +31,10 @@ export interface FormspecProviderProps {
     componentDocument?: any;
     /** Theme document for presentation cascade. */
     themeDocument?: any;
+    /** Initial response data to pre-populate fields (for edit flows). */
+    initialData?: Record<string, any>;
+    /** Registry entries for extension field validation. */
+    registryEntries?: any[];
     /** Component map overrides. */
     components?: ComponentMap;
     children: React.ReactNode;
@@ -46,14 +50,22 @@ export function FormspecProvider({
     definition,
     componentDocument,
     themeDocument,
+    initialData,
+    registryEntries,
     components = {},
     children,
 }: FormspecProviderProps) {
     const engine = useMemo(() => {
         if (externalEngine) return externalEngine;
         if (!definition) throw new Error('FormspecProvider requires either engine or definition');
-        return createFormEngine(definition);
-    }, [externalEngine, definition]);
+        const eng = createFormEngine(definition, undefined, registryEntries);
+        if (initialData) {
+            for (const [key, value] of Object.entries(initialData)) {
+                eng.setValue(key, value);
+            }
+        }
+        return eng;
+    }, [externalEngine, definition, registryEntries, initialData]);
 
     const layoutPlan = useMemo(() => {
         if (!engine) return null;
@@ -125,13 +137,13 @@ export function useFormspecContext(): FormspecContextValue {
 }
 
 /** Recursive item lookup by dotted key path. */
-function findItemByKey(items: any[], key: string): any | null {
+export function findItemByKey(items: any[], key: string): any | null {
     const parts = key.split('.');
     let current = items;
-    for (const part of parts) {
-        const found = current.find((i: any) => i.key === part);
+    for (let i = 0; i < parts.length; i++) {
+        const found = current.find((item: any) => item.key === parts[i]);
         if (!found) return null;
-        if (parts.indexOf(part) === parts.length - 1) return found;
+        if (i === parts.length - 1) return found;
         current = found.children || [];
     }
     return null;

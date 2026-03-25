@@ -1,7 +1,7 @@
 # formspec-react — React Hooks + Auto-Renderer
 
 **Date:** 2026-03-25
-**Status:** Implemented, reviewed — see Roadmap for remaining work
+**Status:** v0.2 complete (47 unit + 14 E2E tests) — see Roadmap for v0.3+ remaining work
 
 ## Problem
 
@@ -162,21 +162,29 @@ import { FormspecForm } from 'formspec-react';
 | Component map overrides | `component-map.ts` | 2 unit |
 | Touched tracking (`touchField`, `isTouched`, `onBlur`) | `context.tsx`, `use-field.ts` | 2 unit |
 | E2E tests (react-demo) | `tests/e2e/browser/react-demo.spec.ts` | 14 Playwright |
+| Signal reactivity (re-render on mutation) | `tests/hooks.test.tsx` | 6 unit |
+| `initialData` prop (edit flows) | `context.tsx`, `tests/hooks.test.tsx` | 2 unit |
+| `registryEntries` prop (extension validation) | `context.tsx`, `tests/hooks.test.tsx` | 1 unit |
+| `findItemByKey` indexOf fix + tests | `context.tsx`, `tests/hooks.test.tsx` | 4 unit |
+| Stable `useSignal` subscribe closure | `use-signal.ts` | via reactivity |
+| `@preact/signals-core` peer dep | `package.json` | — |
+| Conditional exports with `types` | `package.json` | — |
 
-**Total: 33 unit tests + 14 E2E tests — all passing**
+**Total: 47 unit tests + 14 E2E tests — all passing**
 
 ## Roadmap
 
-### v0.2 — Blocking real usage (do these first)
+### v0.2 — Blocking real usage ✅ COMPLETE
 
-| # | Item | Type | Detail |
+| # | Item | Type | Status |
 |---|------|------|--------|
-| 1 | Move `@preact/signals-core` to peerDependencies | **Bug fix** | Currently devDependency. If npm deduplicates to two instances, signal subscriptions silently break. One-line change in `package.json`. |
-| 2 | Stabilize `useSignal` subscribe closure | **Bug fix** | Subscribe closure recreated every render → effect disposed/recreated each cycle. Fix: wrap in `useCallback` with stable `signalRef`. |
-| 3 | Add `initialData` prop to `FormspecProvider` | **Feature** | No way to load existing response data for edit flows. Pass through to `FormEngine`. |
-| 4 | Add `registryEntries` prop to `FormspecProvider` | **Feature** | Extension fields (email, phone, URL validators) won't validate without registry entries. Pass through to `createFormEngine`. |
-| 5 | Add signal reactivity tests | **Test gap** | All unit tests verify initial render only. No test mutates a signal and verifies React re-renders. The core purpose of the hooks is untested. |
-| 6 | Fix `findItemByKey` indexOf bug | **Bug fix** | Uses `parts.indexOf(part)` — breaks on duplicate path segments (e.g., `a.a.b`). Fix: use loop index. |
+| 1 | Move `@preact/signals-core` to peerDependencies | **Bug fix** | ✅ Done |
+| 2 | Stabilize `useSignal` subscribe closure | **Bug fix** | ✅ Done — `useCallback` + stable `signalRef` |
+| 3 | Add `initialData` prop to `FormspecProvider` | **Feature** | ✅ Done — iterates `Record<string,any>`, calls `setValue` per entry |
+| 4 | Add `registryEntries` prop to `FormspecProvider` | **Feature** | ✅ Done — passed to `createFormEngine` third arg |
+| 5 | Add signal reactivity tests | **Test gap** | ✅ Done — 6 tests: useSignal(2), useField, useFieldValue, useWhen, useRepeatCount |
+| 6 | Fix `findItemByKey` indexOf bug | **Bug fix** | ✅ Done — replaced `indexOf` with loop index `i` |
+| 12 | `types` in conditional exports | **DX fix** | ✅ Done — both `.` and `./hooks` have `types` condition |
 
 ### v0.3 — Rendering completeness
 
@@ -187,7 +195,6 @@ import { FormspecForm } from 'formspec-react';
 | 9 | `disabledDisplay: 'protected'` | **Feature** | Non-relevant fields always hidden. When `disabledDisplay` is `protected`, should render disabled/greyed instead of hidden. |
 | 10 | Group-level relevance | **Feature** | Only field-level visibility checked via `FieldViewModel.visible`. Group container nodes should also check `engine.relevantSignals[groupPath]`. |
 | 11 | `role="alert"` on empty errors | **A11y fix** | Screen readers may announce empty alerts on mount. Conditionally render the error element, or remove `role="alert"` when empty. |
-| 12 | `types` in conditional exports | **DX fix** | `./hooks` subpath export lacks `"types"` condition. TS `moduleResolution: "bundler"` may fail to resolve `.d.ts` files. |
 
 ### v0.4 — Engine integration
 

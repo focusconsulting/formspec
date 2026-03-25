@@ -1,5 +1,5 @@
 /** @filedesc Generic Preact-signal → React bridge via useSyncExternalStore. */
-import { useSyncExternalStore, useRef } from 'react';
+import { useSyncExternalStore, useRef, useCallback } from 'react';
 import { effect } from '@preact/signals-core';
 import type { ReadonlyEngineSignal } from 'formspec-engine';
 
@@ -15,14 +15,20 @@ export function useSignal<T>(signal: ReadonlyEngineSignal<T>): T {
     const signalRef = useRef(signal);
     signalRef.current = signal;
 
-    return useSyncExternalStore<T>(
-        (onStoreChange) => {
+    const subscribe = useCallback(
+        (onStoreChange: () => void) => {
             return effect(() => {
                 signalRef.current.value; // track the signal
                 onStoreChange();
             });
         },
-        () => signalRef.current.value as T,
-        () => signalRef.current.value as T,
+        [], // signalRef is stable — no deps needed
     );
+
+    const getSnapshot = useCallback(
+        () => signalRef.current.value as T,
+        [],
+    );
+
+    return useSyncExternalStore<T>(subscribe, getSnapshot, getSnapshot);
 }
