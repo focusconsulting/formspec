@@ -1,0 +1,39 @@
+{
+    "id": "root",
+    "component": "Stack",
+    "category": "layout",
+    "props": { "direction": "vertical" },
+    "cssClasses": ["form-root"],
+    "children": [
+        {
+            "id": "field-name",
+            "component": "TextInput",
+            "category": "field",
+            "props": {},
+            "cssClasses": [],
+            "children": [],
+            "bindPath": "contactInfo.fullName",
+            "fieldItem": {
+                "key": "fullName",
+                "label": "Full Name",
+                "hint": "Enter your full legal name",
+                "dataType": "string"
+            },
+            "presentation": {
+                "widget": "text",
+                "labelPosition": "top"
+            },
+            "labelPosition": "top"
+        },
+        {
+            "id": "field-email",
+            "component": "TextInput",
+            "category": "field",
+            "props": {},
+            "cssClasses": [],
+            "children": [],
+            "bindPath": "contactInfo.email",
+            "when": "$relevant"
+        }
+    ]
+}
